@@ -10,33 +10,60 @@
  */
 
 #include <Arduino.h>
-#include "serialOut.h"
+#include <serialOut.h>
+#include <main.h>
 
-// GPIO2 ist bei den meisten ESP32 DevKit-Boards mit der
-// eingebauten LED verbunden. Falls deine externe LED an
-// einem anderen Pin haengt, hier anpassen.
-const int LED_PIN = 2;
+int led1 = 18;
+int led2 = 19;
+int button1 = 16;
+int button2 = 4;
+unsigned long lastTime = 0;
 
-// Zustand merken, damit wir beim Wechsel eine Meldung ausgeben
 bool ledState = false;
+bool torEinsAuf;
+bool torZweiAuf;
 
 void setup()
 {
-
-  pinMode(LED_PIN, OUTPUT); // LED-Pin als Ausgang konfigurieren
   serialSetup();
+  pinMode(led1, OUTPUT);
+  pinMode(led2, OUTPUT);
+  pinMode(button1, INPUT_PULLUP);
+  pinMode(button2, INPUT_PULLUP);
 }
 
 void loop()
 {
-  // LED-Zustand umschalten
-  ledState = !ledState;
-  digitalWrite(LED_PIN, ledState);
+  checkButtonStates();
+  handleGarageDoor();
+}
 
-  // Status auf der seriellen Konsole ausgeben
-  Serial.print("LED ist jetzt: ");
-  Serial.println(ledState ? "AN" : "AUS");
+void checkButtonStates()
+{
+  torEinsAuf = digitalRead(button1) == LOW ? true : false;
+  torZweiAuf = digitalRead(button2) == LOW ? true : false;
+}
 
-  // Eine Sekunde warten
-  delay(2000);
+void handleGarageDoor()
+{
+  if (torEinsAuf && !torZweiAuf)
+  {
+    digitalWrite(led1, HIGH);
+    digitalWrite(led2, LOW);
+  }
+  else if (!torEinsAuf && torZweiAuf)
+  {
+    digitalWrite(led1, LOW);
+    digitalWrite(led2, HIGH);
+  }
+  else if (torEinsAuf && torZweiAuf)
+  {
+    digitalWrite(led1, HIGH);
+    digitalWrite(led2, HIGH);
+  }
+  else
+  {
+    digitalWrite(led1, LOW);
+    digitalWrite(led2, LOW);
+  }
 }

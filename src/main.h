@@ -1,0 +1,2 @@
+void handleGarageDoor();
+void checkButtonStates();
