@@ -1,7 +1,10 @@
 #include <Arduino.h>
-#include <serialOut.h>
+#include <WiFi.h>
+#include <WebServer.h>
+#include "serialOut.h"
+#include "main_wifi.h"
 #include "main.h"
-#include "secrets.h"
+
 
 
 int led1 = 18;
@@ -11,8 +14,10 @@ int button2 = 4;
 
 bool torEinsAuf = false;
 bool torZweiAuf = false;
+
 bool torEinsAufVorher = false;
 bool torZweiAufVorher = false;
+
 
 void setup()
 {
@@ -21,12 +26,15 @@ void setup()
   pinMode(led2, OUTPUT);
   pinMode(button1, INPUT_PULLUP);
   pinMode(button2, INPUT_PULLUP);
+  wifiVerbinden();
+  startServer();
 }
 
 void loop()
 {
-  checkButtonStates();
+  // checkButtonStates();
   handleGarageDoors();
+  server.handleClient(); // Webserver-Loop
 }
 
 void checkButtonStates()
@@ -59,3 +67,4 @@ void meldeWechsel(const char *name, bool aktuell, bool &vorher)
     vorher = aktuell;
   }
 }
+
