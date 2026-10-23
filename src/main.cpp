@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <serialOut.h>
 #include "main.h"
-#include "secret.h"
+#include "secrets.h"
 
 
 int led1 = 18;
