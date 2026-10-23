@@ -1,27 +1,18 @@
-/*
- * Hello World - ESP32 Setup-Test
- *
- * Ziel: Verifizieren, dass PlatformIO + Wokwi-Simulation laufen,
- * bevor es an das eigentliche Garagentor-Projekt geht.
- *
- * Verhalten: Eingebaute LED (bzw. externe LED an Pin 2) blinkt,
- * und wir geben zusätzlich Status-Meldungen über die serielle
- * Konsole aus - das ist beim späteren Debuggen extrem hilfreich.
- */
-
 #include <Arduino.h>
 #include <serialOut.h>
-#include <main.h>
+#include "main.h"
+#include "secret.h"
+
 
 int led1 = 18;
 int led2 = 19;
 int button1 = 16;
 int button2 = 4;
-unsigned long lastTime = 0;
 
-bool ledState = false;
-bool torEinsAuf;
-bool torZweiAuf;
+bool torEinsAuf = false;
+bool torZweiAuf = false;
+bool torEinsAufVorher = false;
+bool torZweiAufVorher = false;
 
 void setup()
 {
@@ -35,35 +26,36 @@ void setup()
 void loop()
 {
   checkButtonStates();
-  handleGarageDoor();
+  handleGarageDoors();
 }
 
 void checkButtonStates()
 {
-  torEinsAuf = digitalRead(button1) == LOW ? true : false;
-  torZweiAuf = digitalRead(button2) == LOW ? true : false;
+  torEinsAuf = !digitalRead(button1);
+  torZweiAuf = !digitalRead(button2);
 }
 
-void handleGarageDoor()
+void handleGarageDoors()
 {
-  if (torEinsAuf && !torZweiAuf)
+  digitalWrite(led1, torEinsAuf);
+  digitalWrite(led2, torZweiAuf);
+
+  if (torEinsAuf != torEinsAufVorher)
   {
-    digitalWrite(led1, HIGH);
-    digitalWrite(led2, LOW);
+    meldeWechsel("Tor 1", torEinsAuf, torEinsAufVorher);
   }
-  else if (!torEinsAuf && torZweiAuf)
+
+  if (torZweiAuf != torZweiAufVorher)
   {
-    digitalWrite(led1, LOW);
-    digitalWrite(led2, HIGH);
+    meldeWechsel("Tor 2", torZweiAuf, torZweiAufVorher);
   }
-  else if (torEinsAuf && torZweiAuf)
+}
+
+void meldeWechsel(const char *name, bool aktuell, bool &vorher)
+{
+  if (aktuell != vorher)
   {
-    digitalWrite(led1, HIGH);
-    digitalWrite(led2, HIGH);
-  }
-  else
-  {
-    digitalWrite(led1, LOW);
-    digitalWrite(led2, LOW);
+    Serial.println(String(name) + (aktuell ? ": Auf" : ": Zu"));
+    vorher = aktuell;
   }
 }
